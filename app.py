@@ -1,9 +1,9 @@
 from flask import Flask, Blueprint, jsonify, request
-from uuid import uuid4
 
 app = Flask(__name__)
 
-tasks = [{"id": "1", "title": "example task", "is_completed": False}]
+tasks = [{"id": 1, "title": "example task", "is_completed": False}]
+counter = 1
 
 
 @app.route("/")
@@ -17,25 +17,28 @@ v1 = Blueprint("v1", __name__, url_prefix="/v1")
 # get all tasks and create a task
 @v1.route("/tasks", methods=["GET", "POST", "DELETE"])
 def create_task():
+    global counter
     if request.method == "GET":
         return jsonify({"tasks": tasks}), 200
     elif request.method == "POST":
         if "tasks" in request.json:
             for t in request.json["tasks"]:
                 task = {
-                    "id": str(uuid4()),
+                    "id": counter + 1,
                     "title": t.get("title"),
                     "is_completed": t.get("is_completed", False),
                 }
                 tasks.append(task)
+                counter += 1
             return "", 201
         else:
             task = {
-                "id": str(uuid4()),
+                "id": counter + 1,
                 "title": request.json.get("title"),
                 "is_completed": request.json.get("is_completed", False),
             }
             tasks.append(task)
+            counter += 1
             # return json
             return jsonify({"id": task["id"]}), 201
     elif request.method == "DELETE":
@@ -47,8 +50,8 @@ def create_task():
 
 
 # get a task by id, delete a task by id, edit a task by id
-@v1.route("/tasks/<string:id>", methods=["GET", "DELETE", "PUT"])
-def task_by_id(id: str):
+@v1.route("/tasks/<int:id>", methods=["GET", "DELETE", "PUT"])
+def task_by_id(id: int):
     if request.method == "GET":
         for task in tasks:
             if task["id"] == id:
